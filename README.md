@@ -1,5 +1,7 @@
 # SARS-CoV-2_BW.1
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 ## Description: 
 This code represents the implementation of our methodology for preprocessing the Genomic DB. With this code, we generated the images and results of the manuscript [XX] submitted on Journal of XXXXXX and available at XXXXXXX. 
 
