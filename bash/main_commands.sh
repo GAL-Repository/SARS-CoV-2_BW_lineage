@@ -4,7 +4,7 @@
 
 # All available sequences from BQ.1, BA.5.6.2 and BW.1
 
-cat gisaid*fasta >gisaid_2022-11-07.fasta
+cat gisaid*.fasta > gisaid_2022-11-07.fasta
 
 # Linearize fasta
 perl -ne 'chomp;if($_=~/^>/){print "\n$_\n"}else{print $_}' gisaid_2022-11-07.fasta| tail +2 >gisaid_2022-11-07_linear.fasta
