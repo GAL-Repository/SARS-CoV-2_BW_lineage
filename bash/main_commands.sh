@@ -1,20 +1,27 @@
+########
 # Started: 2022-11-26
 # by Rodrigo García-López for Dr. Arias laboratory at IBt, UNAM, Cuernavaca, Mexico.
 # Under GNU GPLv3 license
-
+########
 # All available sequences from BQ.1, BA.5.6.2 and BW.1
 
 cat gisaid*.fasta > gisaid_2022-11-07.fasta
 
+########
 # Linearize fasta
 perl -ne 'chomp;if($_=~/^>/){print "\n$_\n"}else{print $_}' gisaid_2022-11-07.fasta| tail +2 >gisaid_2022-11-07_linear.fasta
 
 # Fix some errors where > is found mid-sequence (47 cases). Fasta is already linear (single-line sequence)
 sed -e 's/\([ATCG]\)>/\1\n>/' gisaid_2022-11-07_linear.fasta >gisaid_2022-11-07_linear_fix.fasta
-# MAFFT failed with very ambiguous sequences (high N%) but we must filter them externally since the --maxambiguous removes Ns from the output alignment. Thus, we first require a list of good files
+
+########
+# MAFFT failed with very ambiguous sequences (high N%) but we must filter them externally since the --maxambiguous 
+# removes Ns from the output alignment. Thus, we first require a list of good files
 # Create a comparison table with ATCG contents using seqtk (requires previous installation)
-printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" >gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv
-seqtk comp gisaid_2022-11-07_linear_fix.fasta >>gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv
+printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" > gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv
+
+########
+seqtk comp gisaid_2022-11-07_linear_fix.fasta >> gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv
 # Determine good and bad sequences (with N% < 10)
 printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" >gisaid_2022-11-07.fasta_linear_fix_atcg_contents-good.tsv
 awk 'NR > 1{Np = $9*100/$2;if(Np<10){print $0}}' gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv >>gisaid_2022-11-07.fasta_linear_fix_atcg_contents-good.tsv

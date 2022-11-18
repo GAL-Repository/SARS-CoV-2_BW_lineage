@@ -3,52 +3,62 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Description: 
-This code represents the implementation of our methodology for preprocessing the Genomic DB. With this code, we generated the images and results of the manuscript [XX] submitted on Journal of XXXXXX and available at XXXXXXX. 
+This code represents the implementation of our methodology for preprocessing the Genomic DB. 
+With this code, we generated the images and results of the manuscript [1] submitted on Infection and available at XXXXXXX. 
 
 # Structure of the code (Pseudocode): 
+Manipulation of .fasta files: (bash commands)
 1) Importing dataset
-2) Computing seven days moving average
-3) Creation of a weekly calender for the plots
+2) Linearize fasta file with multiple sequences
+3) Remove those with incomplete collection date
+4) Create of a comparison table with ATCG contents using [2] [seqtk](https://github.com/lh3/seqtk)
+5) Determine quality of sequences (those with N % < 10)
+6) Extract all high-quality sequences 
+7) Compute a sequence alignment using [3] [MAFFT](https://academic.oup.com/mbe/article/30/4/772/1073398) application 
+8) Linearize MAFFT output fasta file
+9) Calling [4][R](https://www.r-project.org/) scripts for data engineering 
+ * preFilter_raw_metatable.R
+ * Filter_preTable.R
+ * Analyze_MexSARS_indels.R
+10) Create longidutinal pdfs with [5] [pdftk](https://www.pdflabs.com/t/pdftk/)
+11) Finally get the consensus per variant in each category
+ * Mutations_table.R
+ * Get_consensus.R
+ * Get_mutations.R
  
-4) Plotting different interaction-scenarios (relative frequency, heatmap, phylogenetic tree)
-
+12) 2D density plot, Heat map, and Phylogeneti Tree
+	
+	
+	
 
 ## Table of Contents:
-This repository contains different types of formats. We have different tsv files which contain the data until 7th November.
-- The XXX file: Sweden_data.xlsx contains the data for Sweden until 15th December.
-- The XXX file : Austria.xlsx contains the data for Austria until 15th December.
-- The XXX file: Lux-trial_15December.xlsx contains the data for Luxembourg until 15th December.
-- Script XXX.R: Luxembourg_Residents_Fit_1st_and_2nd_wave_Optimize_and_MCMC_ParallelFullChains.ipynb is the code for Luxembourg.
-- Script XXX.R: new_model_for_Sweden_minimize-latest-version.ipynb is the code for Sweden.
-- Script XXX.R: Austria_main_model.ipynb is the code for Austria.
-
+This repository contains different types of formats. We have different Scripts 
+and xlsx files which contain data until 7th November
+- The /bash/main_commands.sh file: contains the general pipeline followed in this work
+- The /code/preFilter_raw_metatable.R File: apply data cleaning and preprocessing
+- The /code/Filter_preTable.R file: contains data engineering process
+- The /code/Analyze_MexSARS_indels.R file: creates a table to analyze nt mutations (substitutions) per positions using a linearized fasta file
+- The /code/Mutations_table.R file: creates a summary table of possible mutations
+- The /code/Get_consensus.R file: parse a table containing SARS-CoV-2 nt positions as rows and each nucleotide (including gaps and Ns)
+- The /code/Get_mutations.R file: parse a table containing SARS-CoV-2 nt positions as rows and each nucleotide (including gaps and Ns)
 ## How to run the scripts
 
 To run our code:
 - Download the full content of the directory containing this README file.
-- Make sure you have installed R (we developed the code under version: R.4.2.2, so we suggest this or subsequent versions). Additionally, the code has been tested on macOS Sierra 10.12.6 and should run on every OS.
-- Open Jupyter.
-- Select the script corresponding to the analysis you are interested in running, and run it.
+- Make sure you have installed R (we developed the code under version: R.4.2.2, so we suggest this or subsequent versions). 
+Also, please verify the corresponding programs / dependencies mention in the section below
 
-
-We used the following libraries and version of the libraries :
--
--
--
-
-More information of what concretly is used in relation to R:
--
--
--
-
-
+We used the following version of the programs/libraries :
+- MAFFT v.7.0.5
 
 ## Credits
-To use our original or adapted codes, please cite our work XXX as XXX, see reference at the end of this document.
+To use our original or adapted codes, please cite our work https:// as [1], see reference at the end of this document.
 
-The R script codes present in this directory has been written by Rodrigo García-López, Xaira Rivera- and Mauricio Rosales-Rivera, the overall project received contributions from CONACyT. 
-This work can be found as a paper in the manuscript published in XXXX on Journal of XXX XXXXXX and titled "The onset of BW.1, a Mexican variant. Will it compete against BQ.1 in Mexico?". 
+The R script codes present in this directory has been written by Rodrigo García-López, Xaira Rivera-Gutierrez and Mauricio Rosales-Rivera.
+We gratefully acknowledge the Consorcio Mexicano de Vigilancia Genómica (CoViGen-Mex) and the authors from the originating laboratories responsible for obtaining the specimens and the submitting laboratories from which genetic sequence data were generated and shared via the GISAID initiative included in Supplementary Table 1, as well as the Unidad de Investigación Médica de Yucatán of the Instituto Mexicano del Seguro Social, which collected most of the BW.1 and BA.5.6 samples used in this study. We appreciate the computer assistance provided by Jerome Verleyen, and Juan Manuel Hurtado. The project LANCAD-UNAM-DGTIC-396 of the Dirección General de Cómputo y Tecnologías de la Información (DGTIC-UNAM) provided supercomputing resources in MIZTLI.
 
-The first version of this work appeared on MedrXiv in XXX as preprint: XXX
+The first version of this work appeared on XXXX in XXXX XXXX as preprint: https://
 
-FULL CITE HERE ----
+### Aditional Cites
+
+### FULL CITE HERE
