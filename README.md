@@ -24,12 +24,7 @@ Manipulation of .fasta files: (bash commands)
 11) Finally get the consensus per variant in each category
  * Mutations_table.R
  * Get_consensus.R
- * Get_mutations.R
- 
-12) 2D density plot, Heat map, and Phylogeneti Tree
-	
-	
-	
+ * Get_mutations.R	
 
 ## Table of Contents:
 This repository contains different types of formats. We have different Scripts 
@@ -38,9 +33,10 @@ and xlsx files which contain data until 7th November
 - The /code/preFilter_raw_metatable.R File: apply data cleaning and preprocessing
 - The /code/Filter_preTable.R file: contains data engineering process
 - The /code/Analyze_MexSARS_indels.R file: creates a table to analyze nt mutations (substitutions) per positions using a linearized fasta file
-- The /code/Mutations_table.R file: creates a summary table of possible mutations
+- The /code/Mutations_table.R file: explore all the alignments and creates table comparing of every genome by position
 - The /code/Get_consensus.R file: parse a table containing SARS-CoV-2 nt positions as rows and each nucleotide (including gaps and Ns)
-- The /code/Get_mutations.R file: parse a table containing SARS-CoV-2 nt positions as rows and each nucleotide (including gaps and Ns)
+- The /code/Get_mutations.R file: parse a table containing SARS-CoV-2 nt positions as rows and each nucleotide (including gaps and Ns) creates a 
+summary table of all  possible observed mutations per position
 ## How to run the scripts
 
 To run our code:
