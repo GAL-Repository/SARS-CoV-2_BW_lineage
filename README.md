@@ -5,7 +5,7 @@
 [![DOI](https://zenodo.org/badge/566477400.svg)](https://zenodo.org/badge/latestdoi/566477400)
 
 ## Description: 
-This code represents the implementation of our methodology for preprocessing the Genomic DB. 
+This code represents the implementation of our methodology for preprocessing the Genomic DB and make the respective analyses. 
 With this code, we generated the images and results of the manuscript [1] submitted on Infection and available at https://doi.org/10.21203/rs.3.rs-2285898/v1. 
 
 # Structure of the code (Pseudocode): 
