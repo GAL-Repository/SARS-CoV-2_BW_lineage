@@ -1,4 +1,5 @@
-# Updated 2022-11-07: All analyses were updated.
+# Updated 2023-02-15: Data was updated. Adjusted script for new sequences added for review (added all until 2022-11-30)
+# Updated 2023-02-12: All analyses were updated.
 # Updated 2022-10-26: For use with BQ.1 and BW.1 variants (wordwide and in Mexico)
 # Started 2022-08-31 by Rodrigo Garcia-Lopez for Prof. Arias laboratory at IBt, UNAM
 # Under GNU GPLv3 license
@@ -6,23 +7,25 @@
 # Read the table
 df <- read.table(unz("analysis_seq_input.zip", "analysis_seq_input.tsv"), header=F, quote="", sep="\t", check.names=FALSE, stringsAsFactors=FALSE)
 meta <- read.table("01_data/AllVariants-metadata.tsv", header=T, sep ='\t',stringsAsFactors = FALSE, check.names=F, fill=T, quote="") # Load metadata with id folio for xref. IDs should be unique
-for_removal <- meta[is.na(meta[,3]),2] # Get IDs for items that should be removed
-for_removal <- c(for_removal, "EPI_ISL_14262716")# manually append a known issue
-for_removal <- unlist(sapply(for_removal,function(x){grep(x,df[,1])})) # and get the matching indices
-df <- df[-for_removal,]
+for_removal <- meta[is.na(meta[,3]),2] # Get IDs for items that should be removed because they have no date
+# for_removal <- c(for_removal, "EPI_ISL_14262716")# manually append a known issue
+# for_removal <- unlist(sapply(for_removal,function(x){grep(x,df[,1])})) # and get the matching indices
+# df <- df[-for_removal,]
 dim(df)
-# [1] 986     2
+# [1] 13883     2
 
 remove <- which(table(df[,1])>1) # Get which are repeated
 remove <- which(!is.na(remove[df[,1]]))
 if(length(remove)>1){df <- df[-remove,]} # to remove them (we cannot determine which is correct)
 dim(df)
-# [1] 986     2
+# [1] 13883     2
+refnum <- grep("Wuhan",df[,1]) # UPDATE 2023-02-13: Locate wuhan reference (it is not the first sequence now)
+df <- rbind(df[refnum,],df[-refnum,]) # UPDATE 2023-02-13: and make it the first sequence again
 nam <- sub("^>","",df[,1]) # We can now save the names of all genomes
 df <- df[,-1] # and their sequences, we no longer need anything else
 ref <- unlist(strsplit(df[1], split = "")) # Extract the first item, the Wuhan reference
 save.image("checkpoint1.Rdata")
-load("checkpoint1.Rdata")
+# load("checkpoint1.Rdata")
 
 # Repeat, but this time create new matrix with postions as rows, genomes as columns
 all <- matrix("-", nrow=length(ref), ncol=length(df))
@@ -39,7 +42,7 @@ rm(nam)
 rm(df)
 save.image("checkpoint2.Rdata")
 
-load("checkpoint2.Rdata")
+# load("checkpoint2.Rdata")
 write.table(all,"Nt_table.tsv", sep="\t", quote=FALSE, col.names=NA, row.names=TRUE) # and export it as a tsv file
 # IMPORTANT NOTE: I'd rather use a larger number of rows than columns, so I'll stick with the second method .
 #### ANALYSIS ####
@@ -70,7 +73,7 @@ dir.create("02_Analyses", showWarnings=FALSE) # Create an output folder
 pos_ins <- ref_map[grep("i",ref_map)] # add a list of positions with insertions (nt not found in the reference but gaps)
 pos_only_in_ref <- ref_map[grep("i",ref_map,invert=TRUE)] # this holds the contrary, those not in insertions.
 save.image("checkpoint2.Rdata")
-write.table(cbind("Position"=ref_map, "Ins"=grepl("i",ref_map)),"02_Analyses/Insertions_by_position_2022-11-07.tsv", sep="\t", quote=FALSE, col.names=NA, row.names=TRUE) # and export it as a table
+write.table(cbind("Position"=ref_map, "Ins"=grepl("i",ref_map)),"02_Analyses/Insertions_by_position_2023-02-15.tsv", sep="\t", quote=FALSE, col.names=NA, row.names=TRUE) # and export it as a table
 # ins_ref <- which(all[1,]=="-") # Detect the actual insertions
 
 ### WHOLE TABLE EXPLORATION ###
@@ -94,7 +97,7 @@ position_variation_Nt <- t(sapply(rownames(all),function(x){print(x);std_ambigui
 rownames(position_variation_Nt) <- rownames(all)
 ref_obs <- sapply(1:nrow(position_variation_Nt),function(x){position_variation_Nt[x,ref[x]]})
 
-write.table(cbind(position_variation_Nt,"Ref"=ref, "Ref=obs"=ref_obs),"02_Analyses/All_genomes_position_composition_2022-11-07.tsv", sep="\t", quote=FALSE, col.names=NA, row.names=TRUE) # and export it as a table
+write.table(cbind(position_variation_Nt,"Ref"=ref, "Ref=obs"=ref_obs),"02_Analyses/All_genomes_position_composition_2023-02-15.tsv", sep="\t", quote=FALSE, col.names=NA, row.names=TRUE) # and export it as a table
 
 ### SUBSET TABLE EXPLORATION ###
 load("checkpoint2.Rdata")
@@ -208,17 +211,31 @@ non_ins_graphs <- function(map,group) {
 save.image("checkpoint2.Rdata")
 
 # ### LOAD METADATA ###
-load("checkpoint2.Rdata")
-meta <- read.table("01_data/AllVariants-metadata.tsv", header=T, sep ='\t',stringsAsFactors = FALSE, check.names=F, fill=T, quote="") # Load metadata with id folio for xref. IDs should be unique
-rownames(meta) <- meta[,2]
+# load("checkpoint2.Rdata")
+meta <- read.table("01_data/AllVariants-metadata.tsv", header=T, sep ='\t',stringsAsFactors = FALSE, check.names=FALSE, fill=T, quote="", row.names=NULL) # Load metadata with id folio for xref. IDs should be unique
+rownames(meta) <- meta[,2] # use gisaid ids as names
 dim(meta)
-# [1] 4846   17
+# [1] 14162    17
 # For both tables to match, we can get use the GISAID ID as names
 old_genomeNames <- colnames(all)
-colnames(all) <- sapply(old_genomeNames, function(x){strsplit(x,"\\|")[[1]][2]})
-meta <- meta[colnames(all)[2:ncol(all)],] # subset and order (this should be nrow(all)-1 in length)
-dim(meta)
-# [1] 4846   17
+colnames(all) <- sapply(old_genomeNames, function(x){strsplit(x,"\\|")[[1]][2]})  # get the gisaid id
+# test <- cbind(colnames(all)[2:ncol(all)],meta[colnames(all)[2:ncol(all)],1])
+test <- cbind(colnames(all),meta[colnames(all),2])
+# UPDATE 2023-02-10: The follwing items have no traceable metadata (Wuhan-Hu-1's missing metadata is expected)
+# test[is.na(test[,2]),1]
+#                                          MN908947 (Wuhan-Hu-1/2019)
+#                                                                  NA
+# hCoV-19/Brazil/DF-LACENDF-530033378/2022|EPI_ISL_16293675|2022-11-2
+#                                                  "EPI_ISL_16293675"
+#               hCoV-19/Greece/345325/2022|EPI_ISL_16383297|2022-11-4
+#                                                  "EPI_ISL_16383297"
+items_noMetadata <- all[,is.na(test[,2])] # keep them in backup object
+all <- all[,!is.na(test[,2])] # and filter them from the main dataframe
+# dim(all)
+# [1] 29903 13880
+meta <- meta[colnames(all),] # UPDATE 2022-02-10: subset and order the rest of the metadata (this should match the all df in length)
+# dim(meta)
+# [1] 13880    17
 all_Months <- find_items(colnames(all),meta, "Month") # Now, months
 map_Months <- group_map(all_Months)
 save.image("checkpoint2.Rdata")
@@ -247,7 +264,7 @@ map_Weeks <- group_map(all_Weeks)
 group <- "Week_BA.5.6.2-World"
 non_ins_graphs(map_Weeks, "Week_BA.5.6.2-World")
 
-# Finally, BW.1
+# Then, BW.1
 load("checkpoint2.Rdata")
 # select the desired items (subset the table)
 meta <- meta[meta["Lineage"]=="BW.1",]
@@ -257,6 +274,17 @@ all_Weeks <- find_items(colnames(all),meta, "Week") # now, weeks
 map_Weeks <- group_map(all_Weeks)
 group <- "Week_BW.1-World"
 non_ins_graphs(map_Weeks, "Week_BW.1-World")
+
+# Finally, BW.1.1
+load("checkpoint2.Rdata")
+# select the desired items (subset the table)
+meta <- meta[meta["Lineage"]=="BW.1.1",]
+all <- all[,rownames(meta)]
+# Analyze weeks
+all_Weeks <- find_items(colnames(all),meta, "Week") # now, weeks
+map_Weeks <- group_map(all_Weeks)
+group <- "Week_BW.1.1-World"
+non_ins_graphs(map_Weeks, "Week_BW.1.1-World")
 
 # next, BA.5.6.2 in Mexico
 load("checkpoint2.Rdata")
@@ -306,6 +334,28 @@ non_ins_graphs(map_Weeks, "Week_BW.1-Mexico")
 
 load("checkpoint2.Rdata")
 # select the desired items (subset the table)
+meta <- meta[meta["Lineage"]=="BW.1.1",]
+meta <- meta[meta["Region_L2"]!="Mexico",]
+all <- all[,rownames(meta)]
+# Analyze weeks
+all_Weeks <- find_items(colnames(all),meta, "Week") # now, weeks
+map_Weeks <- group_map(all_Weeks)
+group <- "Week_BW.1.1-Except_Mexico"
+non_ins_graphs(map_Weeks, "Week_BW.1.1-Except_Mexico")
+
+load("checkpoint2.Rdata")
+# select the desired items (subset the table)
+meta <- meta[meta["Lineage"]=="BW.1.1",]
+meta <- meta[meta["Region_L2"]=="Mexico",]
+all <- all[,rownames(meta)]
+# Analyze weeks
+all_Weeks <- find_items(colnames(all),meta, "Week") # now, weeks
+map_Weeks <- group_map(all_Weeks)
+group <- "Week_BW.1.1-Mexico"
+non_ins_graphs(map_Weeks, "Week_BW.1.1-Mexico")
+
+load("checkpoint2.Rdata")
+# select the desired items (subset the table)
 meta <- meta[meta["Lineage"]=="BQ.1",]
 meta <- meta[meta["Region_L2"]!="Mexico",]
 all <- all[,rownames(meta)]
@@ -329,7 +379,7 @@ non_ins_graphs(map_Weeks, "Week_BQ.1-Mexico")
 # Next, compare by variant
 load("checkpoint2.Rdata")
 # Analyze lineages
-all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, weeks
+all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, lineages
 map_Lineage <- group_map(all_Lineage)
 group <- "Lineage_World"
 non_ins_graphs(map_Lineage, "Lineage_World")
@@ -339,7 +389,7 @@ load("checkpoint2.Rdata")
 meta <- meta[meta["Region_L2"]=="Mexico",]
 all <- all[,rownames(meta)]
 # Analyze lineages
-all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, weeks
+all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, lineages
 map_Lineage <- group_map(all_Lineage)
 group <- "Lineage_Mexico"
 non_ins_graphs(map_Lineage, "Lineage_Mexico")
@@ -349,12 +399,46 @@ load("checkpoint2.Rdata")
 meta <- meta[meta["Region_L2"]!="Mexico",]
 all <- all[,rownames(meta)]
 # Analyze lineages
-all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, weeks
+all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, lineages
 map_Lineage <- group_map(all_Lineage)
 group <- "Lineage_World_except_Mexico"
 non_ins_graphs(map_Lineage, "Lineage_World_except_Mexico")
 
 # repeat, only for Yucatan
+load("checkpoint2.Rdata")
+# meta <- meta[meta["Lineage"]=="BQ.1",]
+meta <- meta[meta["Region_L2"]=="Mexico",]
+meta <- meta[meta["Region_L3"]=="Yucatan",]
+all <- all[,rownames(meta)]
+# Analyze lineages
+all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, lineages
+map_Lineage <- group_map(all_Lineage)
+group <- "Lineage_Yucatan"
+non_ins_graphs(map_Lineage, "Lineage_Yucatan")
+
+# repeat, only for Yucatan
+load("checkpoint2.Rdata")
+meta <- meta[meta["Lineage"]=="BQ.1",]
+meta <- meta[meta["Region_L2"]=="Mexico",]
+meta <- meta[meta["Region_L3"]=="Yucatan",]
+all <- all[,rownames(meta)]
+# Analyze lineages
+all_Weeks <- find_items(colnames(all),meta, "Week") # now, weeks
+map_Weeks <- group_map(all_Weeks)
+group <- "Week_BQ.1-Yucatan"
+non_ins_graphs(map_Weeks, "Week_BQ.1-Yucatan")
+
+load("checkpoint2.Rdata")
+meta <- meta[meta["Lineage"]=="BA.5.6.2",]
+meta <- meta[meta["Region_L2"]=="Mexico",]
+meta <- meta[meta["Region_L3"]=="Yucatan",]
+all <- all[,rownames(meta)]
+# Analyze lineages
+all_Weeks <- find_items(colnames(all),meta, "Week") # now, weeks
+map_Weeks <- group_map(all_Weeks)
+group <- "Week_BA.5.6.2-Yucatan"
+non_ins_graphs(map_Weeks, "Week_BA.5.6.2-Yucatan")
+
 load("checkpoint2.Rdata")
 meta <- meta[meta["Lineage"]=="BW.1",]
 meta <- meta[meta["Region_L2"]=="Mexico",]
@@ -367,12 +451,47 @@ group <- "Week_BW.1-Yucatan"
 non_ins_graphs(map_Weeks, "Week_BW.1-Yucatan")
 
 load("checkpoint2.Rdata")
-meta <- meta[meta["Lineage"]=="BA.5.6.2",]
+meta <- meta[meta["Lineage"]=="BW.1.1",]
 meta <- meta[meta["Region_L2"]=="Mexico",]
 meta <- meta[meta["Region_L3"]=="Yucatan",]
 all <- all[,rownames(meta)]
 # Analyze lineages
 all_Weeks <- find_items(colnames(all),meta, "Week") # now, weeks
 map_Weeks <- group_map(all_Weeks)
-group <- "Week_BA.5.6.2-Yucatan"
-non_ins_graphs(map_Weeks, "Week_BA.5.6.2-Yucatan")
+group <- "Week_BW.1.1-Yucatan"
+non_ins_graphs(map_Weeks, "Week_BW.1.1-Yucatan")
+
+
+# UPDATE 2022-11-16: There is a rare clade of BA.5.6.2 sequences from the world that are phylogenetically closer to Mexican BA.5.6.2 sequences
+load("checkpoint2.Rdata")
+meta2 <- read.table("01_data/Rare_BA.5.6.2_World_cluster.tsv", header=T, sep ='\t',stringsAsFactors = FALSE, check.names=F, fill=T, quote="")
+sub <- meta2[,2]
+sub <- c(sub, "EPI_ISL_15686813")
+all <- all[,sub] # subset only those in the clade
+# Analyze lineages
+all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, weeks
+map_Lineage <- group_map(all_Lineage)
+group <- "Clade_World_BA.5.6.2_close_to_Mex"
+non_ins_graphs(map_Lineage, "Clade_World_BA.5.6.2_close_to_Mex")
+
+load("checkpoint2.Rdata")
+meta2 <- read.table("01_data/Rare_BA.5.6.2_World_cluster2_mini.tsv", header=T, sep ='\t',stringsAsFactors = FALSE, check.names=F, fill=T, quote="")
+sub <- meta2[,2]
+sub <- c(sub, "EPI_ISL_15686813")
+all <- all[,sub] # subset only those in the clade
+# Analyze lineages
+all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, weeks
+map_Lineage <- group_map(all_Lineage)
+group <- "Clade_World_BA.5.6.2_close_to_Mex_minicluster"
+non_ins_graphs(map_Lineage, "Clade_World_BA.5.6.2_close_to_Mex_minicluster")
+
+load("checkpoint2.Rdata")
+meta2 <- read.table("01_data/Rare_BA.5.6.2_World_cluster3_Brazil.tsv", header=T, sep ='\t',stringsAsFactors = FALSE, check.names=F, fill=T, quote="")
+sub <- meta2[,2]
+sub <- c(sub, "EPI_ISL_15686813")
+all <- all[,sub] # subset only those in the clade
+# Analyze lineages
+all_Lineage <- find_items(colnames(all),meta, "Lineage") # now, weeks
+map_Lineage <- group_map(all_Lineage)
+group <- "Clade_World_BA.5.6.2_close_to_Mex_Brazil2seqs"
+non_ins_graphs(map_Lineage, "Clade_World_BA.5.6.2_close_to_Mex_Brazil2seqs")
