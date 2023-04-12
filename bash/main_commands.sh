@@ -1,52 +1,46 @@
-########
-# Started: 2022-11-26
-# by Rodrigo García-López for Dr. Arias laboratory at IBt, UNAM, Cuernavaca, Mexico.
+# Updated: 2023-02-15 # Data was updated once more as new sequences became available from Mexico.
+# Updated: 2023-02-12 # For review 1 Infection
+# Started: 2022-11-26 by Rodrigo García-López for Dr. Arias laboratory at IBt, UNAM, Cuernavaca, Mexico.
 # Under GNU GPLv3 license
-########
-# All available sequences from BQ.1, BA.5.6.2 and BW.1
+# All available sequences from BQ.1, BA.5.6.2 and BW.1 were downloaded from GISAID (last update 2023-02-15)
 
-cat gisaid*.fasta > gisaid_2022-11-07.fasta
+cat gisaid*fasta >gisaid_2023-02-15.fasta
+# Optional: add the Wuhan reference
+cat ref_NC_045512.2.fasta gisaid_2023-02-15.fasta >temp; mv temp gisaid_2023-02-15.fasta
 
-########
+# For the metadata, these are now found in a subfolder
+# Build a single metadata table
+head -n 1 2023_02_15/ba_562_meta.tsv >metadata_gisaid_2023-02-15.tsv
+for i in $(ls 2023_02_15/*meta.tsv);do tail +2 $i;done >>metadata_gisaid_2023-02-15.tsv
+# This was then filtered manually to keep only sequences from may27 to nov26 from 2022
+
+tail +2 metatada_gisaid_2023-02-15_subset_may27-nov26_22.tsv|cut -f 1|grep -v "^$"|grep -A 1 -wFf - gisaid_2023-02-15_linear_fix_filt.fasta >gisaid_2023-02-15_subset_may27-nov26_22.fasta
+
+tail +2 metatada_gisaid_2023-02-15_subset_may27-nov26_22.tsv|cut -f 1-3|grep -v "^$"|sed -e 's/^/>/' -e 's/\t/|/g'|grep -A 1 -wFf - gisaid_2023-02-15_linear_fix_filt.fasta >gisaid_2023-02-15_subset_may27-nov26_22.fasta
+
 # Linearize fasta
-perl -ne 'chomp;if($_=~/^>/){print "\n$_\n"}else{print $_}' gisaid_2022-11-07.fasta| tail +2 >gisaid_2022-11-07_linear.fasta
+perl -ne 'chomp;if($_=~/^>/){print "\n$_\n"}else{print $_}' gisaid_2023-02-15.fasta| tail +2 >gisaid_2023-02-15_linear.fasta
 
 # Fix some errors where > is found mid-sequence (47 cases). Fasta is already linear (single-line sequence)
-sed -e 's/\([ATCG]\)>/\1\n>/' gisaid_2022-11-07_linear.fasta >gisaid_2022-11-07_linear_fix.fasta
-
-########
-# MAFFT failed with very ambiguous sequences (high N%) but we must filter them externally since the --maxambiguous 
-# removes Ns from the output alignment. Thus, we first require a list of good files
+sed -e 's/\([ATCG]\)>/\1\n>/' gisaid_2023-02-15_linear.fasta >gisaid_2023-02-15_linear_fix.fasta
+# MAFFT failed with very ambiguous sequences (high N%) but we must filter them externally since the --maxambiguous removes Ns from the output alignment. Thus, we first require a list of good files
 # Create a comparison table with ATCG contents using seqtk (requires previous installation)
-printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" > gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv
-
-########
-seqtk comp gisaid_2022-11-07_linear_fix.fasta >> gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv
+printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" >gisaid_2023-02-15.fasta_linear_fix_atcg_contents.tsv
+seqtk comp gisaid_2023-02-15_linear_fix.fasta >>gisaid_2023-02-15.fasta_linear_fix_atcg_contents.tsv
 # Determine good and bad sequences (with N% < 10)
-printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" >gisaid_2022-11-07.fasta_linear_fix_atcg_contents-good.tsv
-awk 'NR > 1{Np = $9*100/$2;if(Np<10){print $0}}' gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv >>gisaid_2022-11-07.fasta_linear_fix_atcg_contents-good.tsv
-printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" >gisaid_2022-11-07.fasta_linear_fix_atcg_contents-bad.tsv
-awk 'NR > 1{Np = $9*100/$2;if(Np>=10){print $0}}' gisaid_2022-11-07.fasta_linear_fix_atcg_contents.tsv >>gisaid_2022-11-07.fasta_linear_fix_atcg_contents-bad.tsv
+printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" >gisaid_2023-02-15.fasta_linear_fix_atcg_contents-good.tsv
+awk 'NR > 1{Np = $9*100/$2;if(Np<10){print $0}}' gisaid_2023-02-15.fasta_linear_fix_atcg_contents.tsv >>gisaid_2023-02-15.fasta_linear_fix_atcg_contents-good.tsv
+printf "Genome\tLength\tA\tC\tG\tT\t2amb\t3amb\t4amb(N)\tCpG\ttv\tts\tCpG-ts\n" >gisaid_2023-02-15.fasta_linear_fix_atcg_contents-bad.tsv
+awk 'NR > 1{Np = $9*100/$2;if(Np>=10){print $0}}' gisaid_2023-02-15.fasta_linear_fix_atcg_contents.tsv >>gisaid_2023-02-15.fasta_linear_fix_atcg_contents-bad.tsv
 # Extract all "good" sequences from the fasta (this will only work for linear fastas)
-# seqtk subseq gisaid_2022-11-07_linear_fix.fasta <(tail +2 gisaid_2022-11-07.fasta_linear_fix_atcg_contents-good.tsv|cut -f 1) >2022_08_29_DB_MexCov2_filt.tsv # DEPRECATED: This creates more items than requested.
-grep -A 1 -wFf <(tail +2 gisaid_2022-11-07.fasta_linear_fix_atcg_contents-good.tsv|cut -f 1) gisaid_2022-11-07_linear_fix.fasta >gisaid_2022-11-07_linear_fix_filt.fasta
+# seqtk subseq gisaid_2023-02-15_linear_fix.fasta <(tail +2 gisaid_2023-02-15.fasta_linear_fix_atcg_contents-good.tsv|cut -f 1) >2022_08_29_DB_MexCov2_filt.tsv # DEPRECATED: This creates more items than requested.
+grep -A 1 -wFf <(tail +2 gisaid_2023-02-15.fasta_linear_fix_atcg_contents-good.tsv|cut -f 1) gisaid_2023-02-15_linear_fix.fasta >gisaid_2023-02-15_linear_fix_filt.fasta
 
-# Used for aligning SARS-CoV-2 sequences using Wuhan Wu-h1 reference with a local MAFFT installation
-# mafft --6merpair --thread 6 --preservecase --addtotop 1 --kimura 1 --maxambiguous 0.1 --addfragments test.fasta NC_045512.2.fasta >out1.fasta
-# For this, ~40 GB were required and lasted >2h
-# mafft --thread 12 --preservecase --kimura 1 --maxambiguous 0.1 --addtotop 2022_08_29_DB_MexCov2_fix.fasta --6merpair NC_045512.2.fasta >MAFFT_aligned.fasta
-# DEPRECATED: The last command changed Ns into ----n. If we avoid using --maxambiguous 0.1, we cannot longer use the N % filter but we may keep Ns, so I'd rather filter N %s downstream.
-# Use this command to align (this is the fastest way I managed to find but is memory-heavy):
-mafft --thread 12 --preservecase --kimura 1 --addtotop gisaid_2022-11-07_linear_fix_filt.fasta --6merpair ref_NC_045512.2.fasta >MAFFT_aligned.fasta
-# --6merpair	Distance is calculated based on the number of shared 6mers. Default: on
-# --kimura	Score matrix for nucleotide alignment (1, 20, 200).
-# --maxambiguous	 max freq of Ns or such characters
-# --addfragments	add unaligned sequences to an existing MSA. It assumes that each new sequence was derived from a branch in the tree of an existing alignment. It does not consider the relationship among the sequences to be added.
-# --addtotop	Use only the top sequence as reference
-# --preservecase	preseve uppercase or lowercase
+# UPDATE 2023-02-12:
+# To homogenize results, we now use the mafft version which is called from the NextAlign wrapper from the Nextclade pipeline (offline, local installation).
 
 # Now, linearize the resulting fasta (one seq per line)
-perl -ne 'chomp;if($_=~/^>/){print "\n$_\n"}else{print $_}' MAFFT_aligned.fasta| tail +2 >MAFFT_aligned_linear.fasta
+perl -ne 'chomp;if($_=~/^>/){print "\n$_\n"}else{print $_}' nextclade.aligned.fasta| tail +2 >MAFFT_aligned_linear.fasta
 
 # Create a list of GISAID IDs
 grep "^>" MAFFT_aligned_linear.fasta|cut -d"|" -f 2 >GISAID_ID.txt
@@ -79,35 +73,110 @@ zip analysis_seq_input.zip analysis_seq_input.tsv # and zip it
 # head -n 1 01_data/gisaid_hcov-19_2022_11_07_15_ba562_meta.tsv >01_data/meta_all.tsv
 # for i in $(find 01_data -name "*meta.tsv");do echo 'tail +2 '$i' >>01_data/meta_all.tsv';done|bash
 sed 's/,/\t/g' 01_data/gisaid_hcov-19_MexCov2_Template.csv >01_data/gisaid_hcov-19_MexCov2_Template.tsv
-Rscript preFilter_raw_metatable.R
+Rscript preFilter_rawGISAID_metatable_tsv.R
 Rscript Filter_preTable.R
 
 # Load the table, filter repeated items and create a matrix with each Nt as columns
 Rscript Analyze_MexSARS_indels.R
 # ### #NOTE# ### Even though this actually worked, it was too memory-intensive to work for downstream steps as the table requires ~40GB of memory (local computer has 32GB RAM +10GB swap)
-
+cd 02_Analyses
 # Create longitudinal pdfs
 pdftk Week_BQ.1-World/*.pdf output Week_BQ.1-World.pdf
-pdftk Week_BA.5.6.2-World/*.pdf output Week_BA.5.6.2-World.pdf
-pdftk Week_BW.1-World/*.pdf output Week_BW.1-World.pdf
-pdftk Week_BA.5.6.2-Mexico/*.pdf output Week_BA.5.6.2-Mexico.pdf
-pdftk Week_BA.5.6.2-Except_Mexico/*.pdf output Week_BA.5.6.2-Except_Mexico.pdf
-pdftk Week_BW.1-Mexico/*.pdf output Week_BW.1-Mexico.pdf
 pdftk Week_BQ.1-Except_Mexico/*.pdf output Week_BQ.1-Except_Mexico.pdf
 pdftk Week_BQ.1-Mexico/*.pdf output Week_BQ.1-Mexico.pdf
-
+pdftk Week_BQ.1-Yucatan/*.pdf output Week_BQ.1-Yucatan.pdf
+pdftk Week_BA.5.6.2-World/*.pdf output Week_BA.5.6.2-World.pdf
+pdftk Week_BA.5.6.2-Except_Mexico/*.pdf output Week_BA.5.6.2-Except_Mexico.pdf
+pdftk Week_BA.5.6.2-Mexico/*.pdf output Week_BA.5.6.2-Mexico.pdf
+pdftk Week_BA.5.6.2-Yucatan/*.pdf output Week_BA.5.6.2-Yucatan.pdf
+pdftk Week_BW.1-World/*.pdf output Week_BW.1-World.pdf
+pdftk Week_BW.1-Except_Mexico/*.pdf output Week_BW.1-Except_Mexico.pdf
+pdftk Week_BW.1-Mexico/*.pdf output Week_BW.1-Mexico.pdf
+pdftk Week_BW.1-Yucatan/*.pdf output Week_BW.1-Yucatan.pdf
+pdftk Week_BW.1.1-World/*.pdf output Week_BW.1.1-World.pdf
+pdftk Week_BW.1.1-Except_Mexico/*.pdf output Week_BW.1.1-Except_Mexico.pdf
+pdftk Week_BW.1.1-Mexico/*.pdf output Week_BW.1.1-Mexico.pdf
+pdftk Week_BW.1.1-Yucatan/*.pdf output Week_BW.1.1-Yucatan.pdf
+pdftk Lineage_World/*.pdf output Lineage_World.pdf
+pdftk Lineage_World_except_Mexico/*.pdf output Lineage_World_Except_Mexico.pdf
+pdftk Lineage_Mexico/*.pdf output Lineage_Mexico.pdf
+pdftk Lineage_Yucatan/*.pdf output Lineage_Yucatan.pdf
+cd ..
 # Now, process all the resulting table to get the consensus per variant in each category
 for i in $(find ./02_Analyses/ -name "*.tsv"|grep -v "position");do echo 'Rscript Get_consensus.R '$i' '${i%.tsv}_cons'';done|bash
 # Next, the same tables are used to get all mutations
-for i in $(find ./02_Analyses/ -name "*.tsv"|grep -v "position\|cons");do echo 'Rscript Get_mutations.R '$i' '${i%.tsv}_allMuts'';done >multi.sh
+for i in $(find ./02_Analyses/ -name "*.tsv"|grep -v "position\|cons");do echo 'Rscript Get_mutations.R '$i' '${i%.tsv}_allMuts'';done|shuf >multi.sh
 # run this in parallel
-split -a 2 -d -l 14 --additional-suffix .sh multi.sh run_parallel_
+split -a 2 -d -l 20 --additional-suffix .sh multi.sh run_parallel_
+for i in run_parallel*;do echo nohup bash $i \&\> nohup_$i.out \&;done
 # Now, create a maximum set list with all mutations, derreplicate and sort it
 cat 02_Analyses/Lineage_World/*allMuts.tsv|cut -f 1|sort| uniq >allMuts_inSet.tsv
 # Use this to create a table per 02_folder so that weeks and variants can be compared easily per mutations
 for i in $(ls -d 02_Analyses/*/);do echo 'Rscript Mutations_table.R '$i' _allMuts.tsv allMuts_inSet.tsv';done|bash
-print("End of execution")
+echo "End of execution"
+
+# Compile a table with the mutations we want to track:
+head -n 1 03_Mut_tables/Week_BA.5.6.2-World_Mutations-rel.tsv >Heatmap_sup1.tsv
+grep "T22917G" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T23018G" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "A22893C" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T22942G" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T7666C" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "C14599T" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "G2144A" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T21992-" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "A21993-" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T21994-" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T23019C" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "G29044A" 03_Mut_tables/*rel.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+sed -i -e 's/^\t/Variant\tLocation\tMut\t/' -e 's/03_Mut_tables\/Week_//' -e 's/-/\t/' -e 's/:/\t/' -e 's/_Mutations-...\.tsv//' -e 's/Except_Mexico/World/' Heatmap_sup1.tsv
+sed -i -e 's/T22917G/S:L452R (T22917G)/' -e 's/T23018G/S:F486V (T23018G)/' -e 's/A22893C/S:K444T (A22893C)/' -e 's/T22942G/S:N460K (T22942G)/' -e 's/T7666C/ORF1a:D2467D (T7666C)/' -e 's/C14599T/ORF1b:L378L (C14599T)/' -e 's/G2144A/ORF1a:V627I (G2144A)/' -e 's/T21992-/S:Y144d (T21992-)/' -e 's/A21993-/S:Y144d (A21993-)/' -e 's/T21994-/S:Y144d (T21994-)/' -e 's/T23019C/S:F486A (T23019C)/' -e 's/G29044A/ORF9:K257K (G29044A)/' Heatmap_sup1.tsv
+cp Heatmap_sup1.tsv resp_Heatmap_sup1_rel.tsv
+# This was then sorted manually
+head -n 1 Heatmap_sup1.tsv >Heatmap_sup1_rel.tsv
+grep "T22917G" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "T23018G" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "A22893C" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "T22942G" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "T7666C" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "C14599T" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "G2144A" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "T21992-" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+# grep "A21993-" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+# grep "T21994-" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "T23019C" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+grep "G29044A" Heatmap_sup1.tsv >>Heatmap_sup1_rel.tsv
+sed -i -e 's/\t/ /' -e 's/\t/ | /' -e 's/S:Y144d (T21992-)/S:Y144del (TAT21992---)/' Heatmap_sup1_rel.tsv
 
 
-
-
+head -n 1 03_Mut_tables/Week_BA.5.6.2-World_Mutations-abs.tsv >Heatmap_sup1.tsv
+grep "T22917G" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T23018G" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "A22893C" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T22942G" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T7666C" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "C14599T" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "G2144A" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T21992-" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "A21993-" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T21994-" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "T23019C" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+grep "G29044A" 03_Mut_tables/*abs.tsv|grep -v "ineage\|BQ\|Yucatan\|-World_" >>Heatmap_sup1.tsv
+sed -i -e 's/^\t/Variant\tLocation\tMut\t/' -e 's/03_Mut_tables\/Week_//' -e 's/-/\t/' -e 's/:/\t/' -e 's/_Mutations-...\.tsv//' -e 's/Except_Mexico/World/' Heatmap_sup1.tsv
+sed -i -e 's/T22917G/S:L452R (T22917G)/' -e 's/T23018G/S:F486V (T23018G)/' -e 's/A22893C/S:K444T (A22893C)/' -e 's/T22942G/S:N460K (T22942G)/' -e 's/T7666C/ORF1a:D2467D (T7666C)/' -e 's/C14599T/ORF1b:L378L (C14599T)/' -e 's/G2144A/ORF1a:V627I (G2144A)/' -e 's/T21992-/S:Y144d (T21992-)/' -e 's/A21993-/S:Y144d (A21993-)/' -e 's/T21994-/S:Y144d (T21994-)/' -e 's/T23019C/S:F486A (T23019C)/' -e 's/G29044A/ORF9:K257K (G29044A)/' Heatmap_sup1.tsv
+cp Heatmap_sup1.tsv resp_Heatmap_sup1_abs.tsv
+# This was then sorted manually
+head -n 1 Heatmap_sup1.tsv >Heatmap_sup1_abs.tsv
+grep "T22917G" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "T23018G" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "A22893C" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "T22942G" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "T7666C" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "C14599T" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "G2144A" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "T21992-" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+# grep "A21993-" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+# grep "T21994-" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "T23019C" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+grep "G29044A" Heatmap_sup1.tsv >>Heatmap_sup1_abs.tsv
+sed -i -e 's/\t/ /' -e 's/\t/ | /' -e 's/S:Y144d (T21992-)/S:Y144del (TAT21992---)/' Heatmap_sup1_abs.tsv
