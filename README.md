@@ -69,6 +69,5 @@ We gratefully acknowledge the Consorcio Mexicano de Vigilancia Genómica (CoViGe
 
 The first version of this work appeared on Research Square in November 2022 as preprint: https://doi.org/10.21203/rs.3.rs-2285898/v1. 
 
-### FULL CITE HERE
-Rodrigo García-López, Xaira Rivera-Gutiérrez, Mauricio Rosales-Rivera et al. SARS-CoV-2 BW lineage, a fast-growing Omicron variant from southeast Mexico bearing relevant escape mutations. 
-PREPRINT (Version 1) available at Research Square [https://doi.org/10.21203/rs.3.rs-2285898/v1]
+### FULL CITATION
+SARS-CoV-2 BW lineage, a fast-growing Omicron variant from southeast Mexico bearing relevant escape mutations. García-López R*, Rivera-Gutiérrez X, Rosales-Rivera M, Taboada B*, Zárate S, Muñoz-Medina JE, Roche B, Herrera-Estrella A, Gómez-Gil B, Sanchez-Flores A, Arias CF. Infection. 2023 Apr 14. doi: 10.1007/s15010-023-02034-7.
